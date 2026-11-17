@@ -19,7 +19,7 @@ game:
   license: Apache-2.0
 
 creator:
-  name: "bharadwajbb"
+  name: "BB (Bharadwaj)"
   github: bharadwajbb
   location: ""
   organization: ""

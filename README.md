@@ -13,7 +13,7 @@ A project from **NAF AC6 — Loop Engineering, Spec-Driven Development & the Fut
 | Typical session | 5–10 minutes, 3 levels × 2 rounds |
 | Repository | https://github.com/bharadwajbb/packet-dash |
 | Arcade | Submission card in [ARCADE.md](ARCADE.md) |
-| Built by | [bharadwajbb](https://github.com/bharadwajbb), with Claude Code |
+| Built by | BB (Bharadwaj) · [@bharadwajbb](https://github.com/bharadwajbb), with Claude Code |
 
 ![Level 1: Pak bounced back after entering the right door on the wrong building, with the hosts table and network log](docs/gameplay-level1.png)
 
@@ -140,7 +140,7 @@ Found an incorrect answer or unclear explanation? Open an issue with the level/r
 
 ## Credits
 
-Created by [bharadwajbb](https://github.com/bharadwajbb) with Claude Code. Workshop by John Capobianco, Joksan Flores and Elliot Conner. Adapted from the [NAF AC6 workshop materials](https://github.com/automateyournetwork/NAF_AC6) and [Networking Video Game Starter Kit](https://github.com/automateyournetwork/NetworkingVideoGameStarterKit), using [GitHub Spec Kit](https://github.com/github/spec-kit).
+Created by BB (Bharadwaj) ([@bharadwajbb](https://github.com/bharadwajbb)) with Claude Code. Workshop by John Capobianco, Joksan Flores and Elliot Conner. Adapted from the [NAF AC6 workshop materials](https://github.com/automateyournetwork/NAF_AC6) and [Networking Video Game Starter Kit](https://github.com/automateyournetwork/NetworkingVideoGameStarterKit), using [GitHub Spec Kit](https://github.com/github/spec-kit).
 
 **Assets and dependencies:** all visuals are original and drawn in code, with no image, font or audio assets and no runtime dependencies. News cards quote and link to the published reporting they cite.
 

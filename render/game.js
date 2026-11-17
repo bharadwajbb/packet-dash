@@ -33,13 +33,18 @@ export class Game {
     canvas.addEventListener('keydown', this.onKeyDown);
     canvas.addEventListener('keyup', this.onKeyUp);
     canvas.addEventListener('blur', this.onBlur);
+    this.resizer = typeof ResizeObserver === 'function' ? new ResizeObserver(() => this.fit()) : null;
+    this.resizer?.observe(canvas);
   }
 
+  // Back the canvas with enough pixels for its displayed size, so it stays sharp when the layout grows.
   fit() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    this.canvas.width = VIEW_W * dpr;
-    this.canvas.height = VIEW_H * dpr;
-    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const shown = this.canvas.clientWidth || VIEW_W;
+    const scale = dpr * Math.max(1, shown / VIEW_W);
+    this.canvas.width = Math.round(VIEW_W * scale);
+    this.canvas.height = Math.round(VIEW_H * scale);
+    this.ctx.setTransform(scale, 0, 0, scale, 0, 0);
   }
 
   load(round, world, { tutorial = false, coach = false } = {}) {
@@ -100,6 +105,7 @@ export class Game {
 
   destroy() {
     this.stop();
+    this.resizer?.disconnect();
     this.canvas.removeEventListener('keydown', this.onKeyDown);
     this.canvas.removeEventListener('keyup', this.onKeyUp);
     this.canvas.removeEventListener('blur', this.onBlur);
@@ -306,7 +312,7 @@ export class Game {
       const thought = this.round.mechanic === 'door' ? `my header: DST ${hd.dst} : ${hd.port}`
         : this.round.mechanic === 'path' ? `I'm ${hd.sizeKB} KB · which gets me there sooner?`
         : `board is missing some pieces…`;
-      this.thought(thought, p.x - cam + PW / 2, p.y - 20);
+      this.thought(thought, p.x - cam + PW / 2, Math.min(p.y - 20, this.world.groundY - 118));
     }
   }
 
@@ -318,7 +324,11 @@ export class Game {
     ctx.fillStyle = 'rgba(10,40,56,0.95)'; this.round_(x, y - 30, w, 24, 12); ctx.fill();
     ctx.strokeStyle = C.pak; ctx.lineWidth = 1.5; this.round_(x, y - 30, w, 24, 12); ctx.stroke();
     ctx.fillStyle = C.pak;
-    ctx.beginPath(); ctx.arc(cx - 2, y + 0, 3, 0, Math.PI * 2); ctx.arc(cx - 6, y + 7, 2, 0, Math.PI * 2); ctx.fill();
+    // trail of thought dots down towards Pak
+    const reach = Math.max(8, this.p.y - 6 - y);
+    for (let i = 0, n = Math.max(2, Math.round(reach / 14)); i < n; i++) {
+      ctx.beginPath(); ctx.arc(cx - 2 - i * 1.5, y + 2 + (reach * i) / n, Math.max(1.5, 3.2 - i * 0.4), 0, Math.PI * 2); ctx.fill();
+    }
     this.text(text, x + w / 2, y - 14, '#c9f5ff', 12, 'center', true);
   }
 

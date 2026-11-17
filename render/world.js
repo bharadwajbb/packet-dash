@@ -3,7 +3,7 @@
 // so the platformer and Console mode share one set of choices.
 import { splitMessage } from '../engine/rules.js';
 
-export const VIEW_W = 960;
+export const VIEW_W = 820;
 export const VIEW_H = 400;
 export const GROUND_Y = 340;
 const DECISION_X = 900;
