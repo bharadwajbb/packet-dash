@@ -4,6 +4,7 @@ import { explain } from './engine/feedback.js';
 import * as S from './engine/state.js';
 import { buildWorld } from './render/world.js';
 import { Game } from './render/game.js';
+import { tutorialWorld, TUTORIAL_STEPS, advanceTutorial, tutorialFinished } from './render/tutorial.js';
 import { h } from './ui/dom.js';
 import { mapScreen, briefingScreen, levelDoneScreen, summaryScreen, errorScreen } from './ui/screens.js';
 import { headerBar, receiverBoard, pathPanel, consolePanel } from './ui/panels.js';
@@ -23,6 +24,7 @@ let consoleMode = false;
 let state = null;
 let game = null;
 let play = null; // { roundId, world, selection, lastPath, nodes }
+let tut = null;  // { step, nodes } while the link test is on screen
 
 // ---------- log ----------
 function log(text, kind = 'info') {
@@ -58,6 +60,11 @@ const actions = {
     refreshPlayPanels();
   },
   hint: () => {
+    if (state.view === 'tutorial') {
+      log('admin: in a level, the first hint explains the method and the second shows the answer. Hints are recorded but never cost anything.', 'hint');
+      tutorialEvent({ type: 'hint' });
+      return;
+    }
     if (state.view !== 'play') return;
     const { state: next, hint } = S.useHint(state);
     state = next;
@@ -68,7 +75,9 @@ const actions = {
     consoleMode = !consoleMode;
     btnConsole.setAttribute('aria-pressed', String(consoleMode));
     if (state.view === 'play') { renderPlay(true); log(consoleMode ? 'console mode on' : 'platform mode on', 'info'); }
+    if (state.view === 'tutorial') { renderTutorial(); log(consoleMode ? 'console mode on: every choice becomes a button, no controls needed' : 'platform mode on', 'info'); }
   },
+  finishTutorial: () => setState(S.finishTutorial(state)),
   toggleMotion: () => {
     reducedMotion = !reducedMotion;
     document.documentElement.classList.toggle('reduce-motion', reducedMotion);
@@ -108,7 +117,8 @@ function setState(next) {
   const prevRound = state && state.view === 'play' ? S.currentRound(state).id : null;
   state = next;
   renderHeader();
-  btnHint.disabled = state.view !== 'play';
+  btnHint.disabled = state.view !== 'play' && state.view !== 'tutorial';
+  if (state.view === 'tutorial') { renderTutorial(); return; }
   if (state.view === 'play') {
     const sameRound = prevView === 'play' && prevRound === S.currentRound(state).id;
     if (!sameRound) renderPlay(false);
@@ -133,6 +143,70 @@ function focusHeading() {
 function teardownGame() {
   if (game) { game.destroy(); game = null; }
   play = null;
+  tut = null;
+}
+
+// ---------- link test: learn the controls by doing them ----------
+function renderTutorial() {
+  teardownGame();
+  tut = { step: 0, nodes: {} };
+  const checklist = h('ol', { class: 'tut-steps', 'aria-live': 'polite' });
+  const start = h('button', { class: 'primary', disabled: !consoleMode, onclick: actions.finishTutorial }, 'Start Level 1 ▶');
+  const skip = h('button', { onclick: actions.finishTutorial }, 'Skip link test');
+  tut.nodes = { checklist, start };
+  let stage = null;
+  if (!consoleMode) {
+    const canvas = h('canvas', { id: 'game', tabindex: 0, role: 'application', 'aria-roledescription': 'practice level',
+      'aria-label': 'Link test. Arrow keys run, Space jumps, Up or E enters the door, H asks for help. Press C to use Console mode instead.' });
+    stage = h('div', { class: 'stage' }, canvas, h('p', { class: 'focus-hint', 'aria-hidden': 'true' }, 'Click here or press Tab to focus the game'));
+    game = new Game(canvas, {
+      onEnter: () => tutorialEvent({ type: 'entered' }),
+      onTutorial: tutorialEvent,
+      onFall: () => {},
+      reducedMotion: () => reducedMotion,
+    });
+    game.load(null, tutorialWorld(), { tutorial: true });
+    game.start();
+    canvas.addEventListener('pointerdown', () => canvas.focus());
+  }
+  screenEl.replaceChildren(h('section', { class: `screen screen-tutorial ${consoleMode ? 'is-console' : ''}` },
+    h('p', { class: 'eyebrow' }, 'Before Level 1'),
+    h('h1', { tabindex: -1 }, consoleMode ? 'Link test · console mode' : 'Link test'),
+    h('div', { class: 'play-grid' }, stage,
+      h('section', { class: 'panel', 'aria-labelledby': 'tut-title' },
+        h('h2', { id: 'tut-title' }, consoleMode ? 'No controls to learn' : 'Do each step in the game'),
+        consoleMode ? h('p', { class: 'small' }, 'In Console mode every door, path and piece is a button. Press H at any time for a hint.') : checklist,
+        h('div', { class: 'actions' }, start, consoleMode ? null : skip)))));
+  renderChecklist();
+  if (game) document.getElementById('game').focus(); else focusHeading();
+}
+
+function renderChecklist() {
+  if (!tut) return;
+  tut.nodes.checklist.replaceChildren(...TUTORIAL_STEPS.map((s, i) => {
+    const state_ = i < tut.step ? 'done' : i === tut.step ? 'now' : 'todo';
+    return h('li', { class: `tut-${state_}` },
+      h('span', { class: 'tut-keys', 'aria-hidden': 'true' }, s.keys.map((k) => h('kbd', {}, k))),
+      h('span', {}, s.caption),
+      h('span', { class: 'sr-only' }, state_ === 'done' ? ' (done)' : state_ === 'now' ? ' (current step)' : ''));
+  }));
+}
+
+function tutorialEvent(event) {
+  if (!tut) return;
+  const next = advanceTutorial(tut.step, event);
+  if (next === tut.step) return;
+  const done = TUTORIAL_STEPS[tut.step];
+  tut.step = next;
+  game?.setTutorialStep(next);
+  renderChecklist();
+  log(`✔ link test: ${done.done}`, 'ok');
+  if (done.id === 'enter') log('door 7 on 127.0.0.1 is the echo service: you sent PING, it answered PONG', 'info');
+  if (tutorialFinished(next)) {
+    tut.nodes.start.disabled = false;
+    log('link test passed · press Start Level 1', 'ok');
+    tut.nodes.start.focus();
+  }
 }
 
 function renderPlay(keepRound) {
@@ -165,7 +239,8 @@ function renderPlay(keepRound) {
 
   if (!consoleMode) {
     game = new Game(canvas, { onEnter: actions.enter, onFall: () => {}, reducedMotion: () => reducedMotion });
-    game.load(round, play.world);
+    // First round of each level shows in-world prompts for its new action.
+    game.load(round, play.world, { coach: state.roundIndex === 0 });
     game.setSelection(play.selection);
     if (solved) game.setSolved(null);
     game.start();
@@ -211,7 +286,7 @@ window.addEventListener('keydown', (e) => {
   if (!state || e.altKey || e.ctrlKey || e.metaKey) return;
   const tag = document.activeElement?.tagName;
   if (tag === 'INPUT' || tag === 'TEXTAREA') return;
-  if (state.view !== 'play') return;
+  if (state.view !== 'play' && state.view !== 'tutorial') return;
   if (e.code === 'KeyH') { e.preventDefault(); actions.hint(); }
   else if (e.code === 'KeyC') { e.preventDefault(); actions.toggleConsole(); }
   else if (e.code === 'KeyN' && S.roundProgress(state).solved) { e.preventDefault(); actions.next(); }

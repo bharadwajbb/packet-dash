@@ -32,7 +32,7 @@ export function headerBar(state) {
     }
   } else {
     parts.push(field('SRC', '192.168.1.20'), h('span', { class: 'arrow', 'aria-hidden': 'true' }, '→'), field('DST', '10.0.0.5'),
-      field('STATE', state.view === 'summary' ? 'DELIVERED' : state.view === 'level-done' ? 'LINK UP' : 'READY', state.view === 'map' ? '' : 'ok'));
+      field('STATE', state.view === 'summary' ? 'DELIVERED' : state.view === 'level-done' ? 'LINK UP' : state.view === 'tutorial' ? 'LINK TEST' : 'READY', state.view === 'level-done' || state.view === 'summary' ? 'ok' : ''));
   }
   return parts;
 }

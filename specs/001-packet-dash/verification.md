@@ -6,14 +6,15 @@
 
 | Suite | Result |
 | --- | --- |
-| `npm test` (Node test runner) | 42 / 42 pass |
-| `http://127.0.0.1:8765/tests/` (browser runner, same suite) | 41 / 41 pass (Node adds the "tests discovered" check) |
+| `npm test` (Node test runner) | 46 / 46 pass |
+| `http://127.0.0.1:8765/tests/` (browser runner, same suite) | 45 / 45 pass (Node adds the "tests discovered" check) |
 
 ## Acceptance criteria
 
 | AC | Result | How checked |
 | --- | --- | --- |
-| AC1 fresh session shows map + Level 1 briefing first | Pass | state test; Chrome playtest opened on the map, then the briefing |
+| AC1 map → interactive link test → Level 1 briefing | Pass | state + tutorial step tests; Chrome: steps ticked off only after the actual key actions (E before reaching the door did nothing), Start enabled and focused after the 4th step, Skip works at 390 px |
+| AC1b first-round prompts and Pak's thought bubble | Pass (visual) | Chrome screenshots of 2.1 (▲ over both paths, "I'm 10 KB") and 3.1 (E "mark a piece", then "send when ready") |
 | AC2 1.1 correct door delivers with explanation | Pass | rules + feedback tests; Chrome log: `✔ delivered 10.0.0.5:443 → HTTPS …` |
 | AC3 1.1 wrong building explains, keeps round, returns Pak | Pass | Chrome: log `✖ right door, wrong building …`, Pak x reset to 840 (decision point) |
 | AC4 empty SEND gives guidance, no attempt | Pass | rules test `3.x invalid: empty selection`; state test `invalid input does not count an attempt` |

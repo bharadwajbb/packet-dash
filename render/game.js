@@ -1,5 +1,6 @@
 // Canvas platformer. It only reports "Pak entered zone X"; it never decides correctness.
 import { VIEW_W, VIEW_H } from './world.js';
+import { TUTORIAL_STEPS, stepAnchor } from './tutorial.js';
 
 const C = {
   bg: '#060c18', grid: 'rgba(90,150,255,0.07)', rack: '#0c1526', rackEdge: '#1c2a44',
@@ -10,11 +11,14 @@ const PW = 36, PH = 28;
 const SPEED = 250, GRAVITY = 1900, JUMP = 730, STEP = 1 / 60;
 
 export class Game {
-  constructor(canvas, { onEnter, onFall, reducedMotion }) {
+  constructor(canvas, { onEnter, onFall, onTutorial, reducedMotion }) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
     this.onEnter = onEnter;
     this.onFall = onFall;
+    this.onTutorial = onTutorial;
+    this.tutorial = null; // { step } while playing the link test
+    this.coach = false;   // first-time prompts for a new mechanic
     this.reducedMotion = reducedMotion;
     this.keys = new Set();
     this.selection = new Set();
@@ -38,9 +42,11 @@ export class Game {
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
-  load(round, world) {
+  load(round, world, { tutorial = false, coach = false } = {}) {
     this.round = round;
     this.world = world;
+    this.tutorial = tutorial ? { step: 0, emitted: -1 } : null;
+    this.coach = coach;
     this.solved = false;
     this.selection = new Set();
     this.reachedDecision = false;
@@ -59,6 +65,19 @@ export class Game {
   }
 
   setSelection(sel) { this.selection = new Set(sel); }
+  setTutorialStep(step) {
+    if (!this.tutorial) return;
+    this.tutorial.step = step;
+    const done = TUTORIAL_STEPS[step - 1];
+    if (step >= TUTORIAL_STEPS.length) this.showFlash('✔ LINK TEST PASSED · you know the controls', C.ok, 99);
+    else if (done) this.showFlash(`✔ ${done.done}`, C.ok, 1.2);
+  }
+  emitTutorial(type) {
+    const t = this.tutorial;
+    if (!t || t.emitted === t.step) return;
+    t.emitted = t.step;
+    this.onTutorial?.({ type });
+  }
   setSolved(zone) { this.solved = true; if (zone && zone.kind !== 'piece') this.p.hidden = true; this.showFlash('✔ DELIVERED · press N or Next', C.ok, 99); }
   showFlash(text, color, seconds = 1.8) { this.flash = { text, color, until: this.time + seconds }; }
 
@@ -103,6 +122,11 @@ export class Game {
 
   tryEnter() {
     if (this.solved || !this.p.grounded || this.enterCooldown > 0) return;
+    if (this.tutorial && TUTORIAL_STEPS[this.tutorial.step]?.id !== 'enter') {
+      const z = this.zoneAtPlayer();
+      if (z && this.tutorial.step < 2) { this.showFlash('First get here: finish the steps above', C.dim, 1.2); return; }
+      if (z) { this.showFlash('✔ door 7 (echo) on 127.0.0.1 answered: PING → PONG', C.ok, 1.4); return; }
+    }
     const z = this.zoneAtPlayer();
     if (!z) { this.showFlash('Nothing to enter here: walk to a door, path or terminal', C.dim, 1.2); return; }
     this.enterCooldown = 0.25;
@@ -137,6 +161,12 @@ export class Game {
     if (support !== null) { p.y = support - PH; p.vy = 0; p.grounded = true; }
     else { p.y += p.vy * dt; p.grounded = false; }
     if (p.x >= this.world.decisionX) this.reachedDecision = true;
+    if (this.tutorial) {
+      const id = TUTORIAL_STEPS[this.tutorial.step]?.id;
+      const gap = this.world.gaps[0];
+      if (id === 'move' && Math.abs(p.x - this.world.spawn.x) > 70) this.emitTutorial('moved');
+      if (id === 'jump' && p.grounded && p.x > gap.x + gap.w) this.emitTutorial('crossed-gap');
+    }
     if (p.y > VIEW_H + 40) {
       this.place(this.reachedDecision ? this.world.decisionX : this.world.spawn.x);
       this.showFlash('✕ LINK DOWN · fell into a dropped link, respawned (no penalty)', C.warn);
@@ -200,8 +230,11 @@ export class Game {
     this.text('▼ DECISION POINT', dx + 10, GY - 196, C.dim, 10, 'left');
     // Pak
     if (!this.p.hidden) this.pak(this.p.x - cam, this.p.y);
+    // interactive guidance: link-test keycaps, first-time coach marks, Pak's thought bubble
+    if (this.tutorial) this.drawTutorial(cam, t);
+    else if (!this.solved) this.drawCoach(cam, t, here);
     // prompt
-    if (here && !this.solved && this.p.grounded) {
+    if (here && !this.solved && this.p.grounded && !(this.tutorial && TUTORIAL_STEPS[this.tutorial.step]?.id === 'enter')) {
       const verb = here.kind === 'piece' ? (this.selection.has(here.num) ? 'unmark' : 'mark for resend') : here.kind === 'send' ? 'send' : 'enter';
       this.bubble(`▲ / E  ${verb}: ${here.kind === 'door' ? `${here.ip}:${here.label}` : here.label}`, this.p.x - cam + PW / 2, this.p.y - 16);
     }
@@ -209,6 +242,84 @@ export class Game {
       ctx.fillStyle = 'rgba(6,12,24,0.85)'; ctx.fillRect(0, 10, VIEW_W, 30);
       this.text(this.flash.text, VIEW_W / 2, 31, this.flash.color, 15, 'center', true);
     }
+  }
+
+  // ---------- guidance ----------
+  keycaps(keys, cx, y, caption, t) {
+    const { ctx } = this;
+    const bob = t ? Math.sin(t * 5) * 4 : 0;
+    ctx.font = 'bold 15px ui-monospace, SFMono-Regular, Menlo, monospace';
+    const widths = keys.map((k) => Math.max(34, ctx.measureText(k).width + 18));
+    const total = widths.reduce((a, b) => a + b, 0) + (keys.length - 1) * 8;
+    let x = cx - total / 2;
+    const top = y + bob;
+    keys.forEach((k, i) => {
+      const w = widths[i];
+      ctx.fillStyle = '#7d8aa3'; this.round_(x, top + 3, w, 30, 6); ctx.fill();
+      ctx.fillStyle = '#eef4ff'; this.round_(x, top, w, 30, 6); ctx.fill();
+      this.text(k, x + w / 2, top + 21, '#0b1424', 15, 'center', true);
+      x += w + 8;
+    });
+    if (caption) {
+      ctx.font = 'bold 12px ui-monospace, SFMono-Regular, Menlo, monospace';
+      const cw = ctx.measureText(caption).width + 14;
+      ctx.fillStyle = 'rgba(6,12,24,0.9)'; ctx.fillRect(cx - cw / 2, top + 40, cw, 20);
+      this.text(caption, cx, top + 54, C.warn, 12, 'center', true);
+    }
+    // pointer down to the target
+    ctx.fillStyle = '#eef4ff';
+    ctx.beginPath(); ctx.moveTo(cx - 6, top + (caption ? 64 : 38)); ctx.lineTo(cx + 6, top + (caption ? 64 : 38)); ctx.lineTo(cx, top + (caption ? 72 : 46)); ctx.fill();
+  }
+
+  drawTutorial(cam, t) {
+    const step = this.tutorial.step;
+    // progress strip
+    TUTORIAL_STEPS.forEach((s, i) => {
+      const x = 16 + i * 150;
+      const done = i < step, now = i === step;
+      this.text(`${done ? '✔' : now ? '▶' : '○'} ${s.caption.split(' ')[0]}`, x, 62, done ? C.ok : now ? C.warn : C.dim, 12, 'left', true);
+    });
+    const cur = TUTORIAL_STEPS[step];
+    if (!cur) return;
+    const a = stepAnchor(cur.id, this.world, this.p);
+    this.keycaps(cur.keys, a.x - (cur.id === 'move' || cur.id === 'help' ? cam : cam), a.y, cur.caption, t);
+  }
+
+  drawCoach(cam, t, here) {
+    const p = this.p;
+    const nearDecision = p.x >= this.world.decisionX - 40;
+    if (this.coach && this.round.mechanic === 'path' && nearDecision) {
+      for (const z of this.world.zones) this.keycaps(['▲'], z.x + z.w / 2 - cam, this.world.groundY - z.h - 98, null, t);
+    }
+    if (this.coach && this.round.mechanic === 'pieces' && nearDecision) {
+      const send = this.world.zones.find((z) => z.kind === 'send');
+      if (this.selection.size === 0) {
+        const target = here && here.kind === 'piece' ? here : this.world.zones.find((z) => z.kind === 'piece' && z.x > p.x) ?? this.world.zones[0];
+        this.keycaps(['E'], target.x + target.w / 2 - cam, this.world.groundY - target.h - 112, 'mark a piece to resend', t);
+      } else {
+        this.keycaps(['E'], send.x + send.w / 2 - cam, this.world.groundY - send.h - 112, 'send when ready', t);
+      }
+    }
+    // Pak "reads" its own header at the decision point, so the value to match travels with you.
+    if (nearDecision && !here && p.grounded) {
+      const hd = this.round.header;
+      const thought = this.round.mechanic === 'door' ? `my header: DST ${hd.dst} : ${hd.port}`
+        : this.round.mechanic === 'path' ? `I'm ${hd.sizeKB} KB · which gets me there sooner?`
+        : `board is missing some pieces…`;
+      this.thought(thought, p.x - cam + PW / 2, p.y - 20);
+    }
+  }
+
+  thought(text, cx, y) {
+    const { ctx } = this;
+    ctx.font = 'bold 12px ui-monospace, SFMono-Regular, Menlo, monospace';
+    const w = ctx.measureText(text).width + 18;
+    const x = Math.max(4, Math.min(VIEW_W - w - 4, cx - w / 2));
+    ctx.fillStyle = 'rgba(10,40,56,0.95)'; this.round_(x, y - 30, w, 24, 12); ctx.fill();
+    ctx.strokeStyle = C.pak; ctx.lineWidth = 1.5; this.round_(x, y - 30, w, 24, 12); ctx.stroke();
+    ctx.fillStyle = C.pak;
+    ctx.beginPath(); ctx.arc(cx - 2, y + 0, 3, 0, Math.PI * 2); ctx.arc(cx - 6, y + 7, 2, 0, Math.PI * 2); ctx.fill();
+    this.text(text, x + w / 2, y - 14, '#c9f5ff', 12, 'center', true);
   }
 
   tray(x, y, w, hgt) {
@@ -282,8 +393,8 @@ export class Game {
     const ex = this.p.face > 0 ? 6 : -6;
     ctx.fillStyle = '#ffffff';
     ctx.beginPath(); ctx.arc(x + PW / 2 - 6 + ex, y + 15, 3, 0, Math.PI * 2); ctx.arc(x + PW / 2 + 6 + ex, y + 15, 3, 0, Math.PI * 2); ctx.fill();
-    const hd = this.round.header;
-    const tag = this.round.mechanic === 'door' ? `:${hd.port}` : this.round.mechanic === 'path' ? `${hd.sizeKB}KB` : 'SEQ';
+    const hd = this.round?.header;
+    const tag = !this.round ? 'PING' : this.round.mechanic === 'door' ? `:${hd.port}` : this.round.mechanic === 'path' ? `${hd.sizeKB}KB` : 'SEQ';
     this.text(tag, x + PW / 2, y + 9, '#c9f5ff', 7, 'center', true);
   }
 

@@ -48,11 +48,12 @@ Opening `index.html` straight from disk (`file://`) won't work, because JavaScri
 
 ## How to play
 
-1. Read the network map and the level briefing.
-2. Run to the decision point, checking the **packet header bar** at the top and the panel beside the game.
-3. Enter a door, a path or the SEND flag. Entering is your answer; walking past isn't.
-4. Read the **network log**. A wrong answer bounces you back to the decision point to try again; a correct one enables **Next**.
-5. Deliver all six rounds to light every link and reach the delivery report.
+1. Play the **link test**: a short practice stretch where floating keys show you each control right where you need it (run → jump the gap → enter door 7 on 127.0.0.1 → ask the admin). Each step ticks off as you do it. You can skip it.
+2. Read the network map and the level briefing.
+3. Run to the decision point. Pak shows the header value it has to match in a thought bubble, and the first round of each level shows floating keys for that level's new action.
+4. Enter a door, a path or the SEND flag. Entering is your answer; walking past isn't.
+5. Read the **network log**. A wrong answer bounces you back to the decision point to try again; a correct one enables **Next**.
+6. Deliver all six rounds to light every link and reach the delivery report.
 
 | Control | Action |
 | --- | --- |
@@ -120,10 +121,10 @@ The browser runner is at **http://127.0.0.1:8000/tests/** while the server runs.
 
 | Check | Result | Evidence / notes |
 | --- | --- | --- |
-| Correct, incorrect and boundary cases | Pass | 42/42 Node, 41/41 browser runner (Node adds a "tests discovered" check). Covers every spec case, including the 100 KB tie being rejected |
+| Correct, incorrect and boundary cases | Pass | 46/46 Node tests. Covers every spec case, including the 100 KB tie being rejected, plus link-test step order |
 | Briefings and explanations checked against sources | Pass (author review) | RFC 9293 §3.4/§3.5.2 and RFC 2018 §3/§5 wording confirmed against rfc-editor.org; news cards checked against the linked articles on 2026-11-17. Not yet reviewed by a second person |
 | Retry, hint, duplicate submit, completion, restart | Pass | Automated state tests, plus a Chrome check: wrong answer → attempt 1, cancelled restart keeps progress, confirmed restart returns to the map |
-| Keyboard-only core playthrough | Pass (automated) | Headless Chrome played all six rounds with key presses only, platform mode for 1.1–3.1 and Console mode for 3.2. No console errors. A human keyboard-only run hasn't been recorded yet |
+| Keyboard-only core playthrough | Pass (automated) | Headless Chrome completed the link test and all six rounds with key presses only, platform mode for 1.1–3.1 and Console mode for 3.2. No console errors. A human keyboard-only run hasn't been recorded yet |
 | Narrow layout and reduced motion | Pass | 390 px wide: no horizontal scroll. The OS reduced-motion setting turns on reduced mode |
 | Fresh checkout run instructions | Pass | `python3 start.py --no-open --port 8765` served the game used in all checks above |
 | Screen reader | Not run | A live region and text equivalents are in place but haven't been tested with VoiceOver or NVDA |

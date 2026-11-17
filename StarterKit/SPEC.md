@@ -58,7 +58,8 @@ Each level's briefing card states its boundary in one plain sentence, for exampl
 
 As a learner, I want to apply the rule to visible evidence and understand the result.
 
-- **AC1:** Given a fresh session, when I start, then I see the network map and the Level 1 briefing card before any decision point.
+- **AC1:** Given a fresh session, when I start, then I see the network map, then an interactive **link test** (an ungraded practice stretch where floating keys show each control at the spot it's needed, and each step ticks off once performed: run, jump, enter a door, ask for help), then the Level 1 briefing. The link test can be skipped, is shown once per page session, and never affects progress. Controls are taught by doing, not by text.
+- **AC1b:** The first round of each level shows in-world prompts for that level's new action (enter one of the two paths; mark a piece, then SEND), and at the decision point Pak shows the header value it must match in a thought bubble.
 - **AC2:** Given Level 1 round 1 (header `DST 10.0.0.5 : 443`), when I enter building 10.0.0.5's door 443, then the door opens, the log prints a delivered line naming the address and port, and the explanation appears.
 - **AC3:** Given that round, when I enter building 10.0.0.9's door 443, then the log says "right door, wrong building", explains that the address picks the machine, completion stays unchanged, and Pak returns to the decision point.
 - **AC4:** Given Level 3, when I press SEND with no pieces selected, then the log shows guidance ("select at least one piece to resend") and attempts and completion stay unchanged.

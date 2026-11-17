@@ -138,6 +138,17 @@ summary { cursor: pointer; color: var(--muted); font-family: var(--mono); }
 .stats td { white-space: nowrap; }
 .screen-done .stats, .screen-summary .stats { max-width: 640px; }
 
+/* link test checklist */
+.tut-steps { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 8px; }
+.tut-steps li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; font-family: var(--mono); }
+.tut-keys { display: inline-flex; gap: 4px; min-width: 70px; }
+.tut-keys kbd { background: #eef4ff; color: #0b1424; border: 0; box-shadow: 0 3px 0 #7d8aa3; padding: 2px 7px; font-weight: 700; opacity: 1; }
+.tut-done { color: var(--ok); border-color: var(--ok) !important; }
+.tut-done::after { content: '✔'; margin-left: auto; }
+.tut-now { color: var(--warn); border-color: var(--warn) !important; animation: throb-warn 1.4s ease-in-out infinite; }
+.tut-todo { color: var(--muted); }
+@keyframes throb-warn { 50% { background: rgba(255, 176, 32, 0.12); } }
+
 /* receiver board */
 .slots { list-style: none; padding: 0; margin: 8px 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .slot { border: 2px solid var(--line); border-radius: 8px; padding: 6px; display: grid; gap: 2px; font-family: var(--mono); text-align: center; }

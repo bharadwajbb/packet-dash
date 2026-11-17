@@ -4,7 +4,7 @@ import { evaluate } from './rules.js';
 export function createSession(content) {
   const progress = {};
   for (const level of content.levels) for (const r of level.rounds) progress[r.id] = { attempts: 0, hints: 0, solved: false };
-  return { content, view: 'map', levelIndex: 0, roundIndex: 0, progress, last: null };
+  return { content, view: 'map', levelIndex: 0, roundIndex: 0, progress, last: null, tutorialDone: false };
 }
 
 const clone = (s) => ({ ...s, progress: Object.fromEntries(Object.entries(s.progress).map(([k, v]) => [k, { ...v }])) });
@@ -15,10 +15,17 @@ export const roundProgress = (s) => s.progress[currentRound(s).id];
 export const isLevelComplete = (s, level) => level.rounds.every((r) => s.progress[r.id].solved);
 export const isFinalLevel = (s) => s.levelIndex === s.content.levels.length - 1;
 
-// map → briefing (for the current level)
+// map → link test (first time only) → briefing (for the current level)
 export function openBriefing(s) {
   if (s.view !== 'map') return s;
-  return { ...clone(s), view: 'briefing', last: null };
+  const view = s.levelIndex === 0 && !s.tutorialDone ? 'tutorial' : 'briefing';
+  return { ...clone(s), view, last: null };
+}
+
+// link test → briefing. Finishing and skipping both land here; nothing is graded.
+export function finishTutorial(s) {
+  if (s.view !== 'tutorial') return s;
+  return { ...clone(s), view: 'briefing', tutorialDone: true };
 }
 
 // briefing → play
@@ -73,7 +80,7 @@ export function next(s) {
 
 // Restart only when confirmed; cancel returns the same state.
 export function restart(s, confirmed) {
-  return confirmed ? createSession(s.content) : s;
+  return confirmed ? { ...createSession(s.content), tutorialDone: s.tutorialDone } : s;
 }
 
 export function totals(s) {

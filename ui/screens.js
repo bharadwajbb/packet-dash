@@ -65,7 +65,6 @@ export function briefingScreen(state, actions) {
     h('div', { class: 'card' }, h('h2', {}, 'The idea'), h('p', {}, b.analogy)),
     h('div', { class: 'card card-term' }, h('h2', {}, 'Worked example'), h('p', { class: 'mono' }, b.example)),
     h('p', { class: 'boundary' }, h('strong', {}, 'Keeping it simple: '), b.boundary),
-    b.controls ? h('p', { class: 'controls-tip' }, b.controls) : null,
     h('details', {}, h('summary', {}, 'Sources'), sourceLinks(state.content, level.sourceIds)),
     h('div', { class: 'actions' }, h('button', { class: 'primary', onclick: actions.beginPlay }, 'Start level ▶')));
 }

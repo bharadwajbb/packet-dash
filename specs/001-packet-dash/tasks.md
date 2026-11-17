@@ -45,6 +45,13 @@ Generated from `spec.md` and `plan.md`. One complete round first (T1–T9), then
 - [x] T21 README with actual behavior, commands and verification
 - [x] T22 automated Chrome playtest of all six rounds; screenshots in `docs/`
 
+## Slice 8 · Interactive onboarding (added 2026-11-17 after feedback: "instructions should be interactive, not text")
+
+- [x] T26 `render/tutorial.js`: link test world and pure step logic (run → jump → enter → help)
+- [x] T27 floating keycaps, progress strip and live checklist; Skip; shown once per session
+- [x] T28 first-round coach prompts for paths and pieces; Pak's thought bubble at the decision point
+- [x] T29 removed the text control instructions from briefings
+
 ## Not done (recorded, not hidden)
 
 - [ ] T23 human keyboard-only playthrough by a teammate

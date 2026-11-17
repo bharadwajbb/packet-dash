@@ -71,14 +71,19 @@
       "title": "Find the Door",
       "outcome": "Tell apart what an IP address picks (the machine) from what a port picks (the program), and recognise \"connection refused\".",
       "mechanic": "door",
-      "link": { "from": "Laptop", "to": "Router" },
+      "link": {
+        "from": "Laptop",
+        "to": "Router"
+      },
       "briefing": {
         "analogy": "An IP address is a building's street address. A port is a numbered door inside that building, and behind each open door one program is listening: a website on 443 (HTTPS), remote login on 22 (SSH), a PostgreSQL database on 5432.",
         "example": "A packet for 172.16.0.8 : 22 goes to building 172.16.0.8 and through door 22 to the SSH program. If door 22 there is dark, nobody is listening: the server sends back a reset and your app says \"connection refused\". The packet never tries another door.",
-        "boundary": "This level skips how the packet finds the building (routing) and any firewalls. The road there already works.",
-        "controls": "Arrow keys run, Space jumps, Up or E enters a door. Prefer no jumping? Press C for Console mode at any time."
+        "boundary": "This level skips how the packet finds the building (routing) and any firewalls. The road there already works."
       },
-      "sourceIds": ["iana-ports", "rfc9293-reset"],
+      "sourceIds": [
+        "iana-ports",
+        "rfc9293-reset"
+      ],
       "feedback": {
         "correct-deliver": "✔ delivered {ip}:{port} → {service}. The address picked building {ip}; port {port} picked the {service} program listening there.",
         "correct-refused": "✔ RST from {ip}:{port} — connection refused. Nothing listens on port {port} at {ip}, so the server answers with a reset and your app reports \"connection refused\". A packet never switches to another door.",
@@ -86,7 +91,7 @@
         "wrong-door": "✖ wrong door. Building {ip} is right, but door {chosenPort} is {chosenService}. The header asks for port {port}, and a packet can't pick a different door.",
         "wrong-door+refused": "Door {port} here is CLOSED, so the right call is Bounce back: the server resets the connection.",
         "wrong-building+refused": "Door {port} on {ip} is CLOSED, so the right call is Bounce back: the server resets the connection.",
-        "closed-door":"✖ nobody home. Port {port} at {ip} is CLOSED: no program is listening, so nothing receives the packet here. The server replies with a reset. Use the Bounce back pad to report \"connection refused\".",
+        "closed-door": "✖ nobody home. Port {port} at {ip} is CLOSED: no program is listening, so nothing receives the packet here. The server replies with a reset. Use the Bounce back pad to report \"connection refused\".",
         "unneeded-bounce": "✖ not refused. {service} is LISTENING on {ip}:{port}, so the packet gets delivered. Bounce back is only for a door where nobody is listening.",
         "invalid-input": "Choose a door or the Bounce back pad."
       },
@@ -98,24 +103,62 @@
           "Investigators were still working out whether it was human error, an installation mistake or faulty equipment."
         ],
         "connection": "Every connection attempt is a packet knocking on an address and a port, exactly like the doors in this level. One device knocking a thousand times every few seconds can keep the doors busy for the traffic that matters.",
-        "sourceIds": ["news-faa-scripps", "news-faa-aljazeera"]
+        "sourceIds": [
+          "news-faa-scripps",
+          "news-faa-aljazeera"
+        ]
       },
       "rounds": [
         {
           "id": "1.1",
           "mechanic": "door",
-          "header": { "src": "192.168.1.20", "dst": "10.0.0.5", "port": 443, "note": "HTTPS request" },
+          "header": {
+            "src": "192.168.1.20",
+            "dst": "10.0.0.5",
+            "port": 443,
+            "note": "HTTPS request"
+          },
           "buildings": [
-            { "ip": "10.0.0.5", "doors": [
-              { "port": 22, "service": "SSH", "listening": true },
-              { "port": 443, "service": "HTTPS", "listening": true },
-              { "port": 5432, "service": "PostgreSQL", "listening": true }
-            ] },
-            { "ip": "10.0.0.9", "doors": [
-              { "port": 22, "service": "SSH", "listening": true },
-              { "port": 443, "service": "HTTPS", "listening": true },
-              { "port": 5432, "service": "PostgreSQL", "listening": true }
-            ] }
+            {
+              "ip": "10.0.0.5",
+              "doors": [
+                {
+                  "port": 22,
+                  "service": "SSH",
+                  "listening": true
+                },
+                {
+                  "port": 443,
+                  "service": "HTTPS",
+                  "listening": true
+                },
+                {
+                  "port": 5432,
+                  "service": "PostgreSQL",
+                  "listening": true
+                }
+              ]
+            },
+            {
+              "ip": "10.0.0.9",
+              "doors": [
+                {
+                  "port": 22,
+                  "service": "SSH",
+                  "listening": true
+                },
+                {
+                  "port": 443,
+                  "service": "HTTPS",
+                  "listening": true
+                },
+                {
+                  "port": 5432,
+                  "service": "PostgreSQL",
+                  "listening": true
+                }
+              ]
+            }
           ],
           "hints": [
             "Read the header from left to right: DST is the building's address, the number after the colon is the door. Find the building first, then the door.",
@@ -125,18 +168,53 @@
         {
           "id": "1.2",
           "mechanic": "door",
-          "header": { "src": "192.168.1.20", "dst": "10.0.0.9", "port": 5432, "note": "database query" },
+          "header": {
+            "src": "192.168.1.20",
+            "dst": "10.0.0.9",
+            "port": 5432,
+            "note": "database query"
+          },
           "buildings": [
-            { "ip": "10.0.0.5", "doors": [
-              { "port": 22, "service": "SSH", "listening": true },
-              { "port": 443, "service": "HTTPS", "listening": true },
-              { "port": 5432, "service": "PostgreSQL", "listening": true }
-            ] },
-            { "ip": "10.0.0.9", "doors": [
-              { "port": 22, "service": "SSH", "listening": true },
-              { "port": 443, "service": "HTTPS", "listening": true },
-              { "port": 5432, "service": "PostgreSQL", "listening": false }
-            ] }
+            {
+              "ip": "10.0.0.5",
+              "doors": [
+                {
+                  "port": 22,
+                  "service": "SSH",
+                  "listening": true
+                },
+                {
+                  "port": 443,
+                  "service": "HTTPS",
+                  "listening": true
+                },
+                {
+                  "port": 5432,
+                  "service": "PostgreSQL",
+                  "listening": true
+                }
+              ]
+            },
+            {
+              "ip": "10.0.0.9",
+              "doors": [
+                {
+                  "port": 22,
+                  "service": "SSH",
+                  "listening": true
+                },
+                {
+                  "port": 443,
+                  "service": "HTTPS",
+                  "listening": true
+                },
+                {
+                  "port": 5432,
+                  "service": "PostgreSQL",
+                  "listening": false
+                }
+              ]
+            }
           ],
           "hints": [
             "Find the building and door from the header, then check its LED: LISTENING means a program will take the packet; CLOSED means nobody will.",
@@ -150,14 +228,18 @@
       "title": "Fast or Wide?",
       "outcome": "Predict whether a short narrow path or a long wide path delivers a packet of a given size sooner.",
       "mechanic": "path",
-      "link": { "from": "Router", "to": "ISP" },
+      "link": {
+        "from": "Router",
+        "to": "ISP"
+      },
       "briefing": {
         "analogy": "Latency is how long the road is: travel time, even for a tiny packet. Bandwidth is how wide the road is: how many KB of your packet squeeze through each millisecond.",
         "example": "delivery time = travel time + size ÷ bandwidth. A 40 KB packet on a 5 ms, 2 KB/ms cable takes 5 + 40 ÷ 2 = 25 ms.",
-        "boundary": "We count only travel time and squeeze-through time, for one one-way trip. Real networks add queues, handshakes and round trips.",
-        "controls": "Run to the fork and enter the path you think delivers sooner. The race replay shows both."
+        "boundary": "We count only travel time and squeeze-through time, for one one-way trip. Real networks add queues, handshakes and round trips."
       },
-      "sourceIds": ["kurose-delay"],
+      "sourceIds": [
+        "kurose-delay"
+      ],
       "feedback": {
         "correct-fastest": "✔ delivered in {chosenMs} ms via {chosenName}. {chosenName}: {chosenCalc}. {otherName}: {otherCalc}.",
         "wrong-wider": "✖ {chosenName}: {chosenCalc}. {otherName}: {otherCalc}. A {size} KB packet barely uses the extra width, so the long road costs more than the narrow pipe.",
@@ -171,16 +253,35 @@
           "The router at the centre of the outage was installed as part of that copper-to-fibre work."
         ],
         "connection": "Fibre is this level's wide trunk: far more bandwidth than copper, which is why networks upgrade. But you just saw that bandwidth isn't the only thing that sets speed, and the outage is a reminder that the change itself carries risk.",
-        "sourceIds": ["news-faa-scripps"]
+        "sourceIds": [
+          "news-faa-scripps"
+        ]
       },
       "rounds": [
         {
           "id": "2.1",
           "mechanic": "path",
-          "header": { "src": "192.168.1.20", "dst": "10.0.0.5", "sizeKB": 10, "note": "chat message" },
+          "header": {
+            "src": "192.168.1.20",
+            "dst": "10.0.0.5",
+            "sizeKB": 10,
+            "note": "chat message"
+          },
           "paths": [
-            { "id": "tunnel", "name": "Copper Tunnel", "medium": "copper", "travelMs": 20, "bandwidthKBperMs": 1 },
-            { "id": "trunk", "name": "Fibre Trunk", "medium": "fibre", "travelMs": 110, "bandwidthKBperMs": 10 }
+            {
+              "id": "tunnel",
+              "name": "Copper Tunnel",
+              "medium": "copper",
+              "travelMs": 20,
+              "bandwidthKBperMs": 1
+            },
+            {
+              "id": "trunk",
+              "name": "Fibre Trunk",
+              "medium": "fibre",
+              "travelMs": 110,
+              "bandwidthKBperMs": 10
+            }
           ],
           "hints": [
             "Work out each path: travel ms + size ÷ bandwidth. The smaller total wins, whatever the road looks like.",
@@ -190,10 +291,27 @@
         {
           "id": "2.2",
           "mechanic": "path",
-          "header": { "src": "192.168.1.20", "dst": "10.0.0.5", "sizeKB": 1000, "note": "photo upload" },
+          "header": {
+            "src": "192.168.1.20",
+            "dst": "10.0.0.5",
+            "sizeKB": 1000,
+            "note": "photo upload"
+          },
           "paths": [
-            { "id": "tunnel", "name": "Copper Tunnel", "medium": "copper", "travelMs": 20, "bandwidthKBperMs": 1 },
-            { "id": "trunk", "name": "Fibre Trunk", "medium": "fibre", "travelMs": 110, "bandwidthKBperMs": 10 }
+            {
+              "id": "tunnel",
+              "name": "Copper Tunnel",
+              "medium": "copper",
+              "travelMs": 20,
+              "bandwidthKBperMs": 1
+            },
+            {
+              "id": "trunk",
+              "name": "Fibre Trunk",
+              "medium": "fibre",
+              "travelMs": 110,
+              "bandwidthKBperMs": 10
+            }
           ],
           "hints": [
             "Same paths, much bigger packet. Recalculate: the squeeze-through part grows with size.",
@@ -207,14 +325,19 @@
       "title": "Lost Pieces",
       "outcome": "Identify exactly which numbered pieces are missing, whatever order the rest arrived in, and resend only those.",
       "mechanic": "pieces",
-      "link": { "from": "ISP", "to": "Server" },
+      "link": {
+        "from": "ISP",
+        "to": "Server"
+      },
       "briefing": {
         "analogy": "Big messages travel as numbered pieces. They can arrive out of order, or fall into a gap and never arrive. The receiver sorts pieces by number and tells the sender which numbers it has; the sender resends only the gaps.",
         "example": "Pieces 1–4 are sent; 2, 4 and 1 arrive. The receiver holds 1, 2, 4, so the sender resends just piece 3.",
-        "boundary": "No timers, windows or handshakes here: just which numbers arrived and which are missing.",
-        "controls": "Stand at a numbered terminal and press E to mark it for resend, then press E at the SEND flag."
+        "boundary": "No timers, windows or handshakes here: just which numbers arrived and which are missing."
       },
-      "sourceIds": ["rfc9293-seq", "rfc2018"],
+      "sourceIds": [
+        "rfc9293-seq",
+        "rfc2018"
+      ],
       "feedback": {
         "correct-resend": "✔ message complete: \"{message}\". The receiver held {held}; resending {missing} filled every gap.",
         "still-missing": "✖ still missing {stillMissing}. The receiver holds {held} out of 1–{n}. Every number not on the board has to be resent.",
@@ -230,15 +353,27 @@
           "Around 6:30 p.m. ET Monday, Chase said transactions were posting normally."
         ],
         "connection": "Like your message, a transaction is only finished when the other side confirms it has everything. When one side can't confirm, the other side waits, which is how one bank's problem showed up as slowness at the banks it was dealing with.",
-        "sourceIds": ["news-chase-aljazeera", "news-chase-cnn"]
+        "sourceIds": [
+          "news-chase-aljazeera",
+          "news-chase-cnn"
+        ]
       },
       "rounds": [
         {
           "id": "3.1",
           "mechanic": "pieces",
-          "header": { "src": "192.168.1.20", "dst": "10.0.0.5", "message": "HELLO WORLD!" },
+          "header": {
+            "src": "192.168.1.20",
+            "dst": "10.0.0.5",
+            "message": "HELLO WORLD!"
+          },
           "pieceCount": 6,
-          "arrived": [1, 2, 4, 6],
+          "arrived": [
+            1,
+            2,
+            4,
+            6
+          ],
           "hints": [
             "Look at the receiver board, not the order things happened. List 1 to 6 and cross off every number on the board.",
             "The board holds 1, 2, 4, 6. Mark 3 and 5, then SEND."
@@ -247,9 +382,19 @@
         {
           "id": "3.2",
           "mechanic": "pieces",
-          "header": { "src": "192.168.1.20", "dst": "10.0.0.5", "message": "PING PONG OK" },
+          "header": {
+            "src": "192.168.1.20",
+            "dst": "10.0.0.5",
+            "message": "PING PONG OK"
+          },
           "pieceCount": 6,
-          "arrived": [4, 1, 6, 2, 5],
+          "arrived": [
+            4,
+            1,
+            6,
+            2,
+            5
+          ],
           "hints": [
             "Pieces arriving late or early are not lost. Sort the board by number, then find the gaps.",
             "Arrived 4, 1, 6, 2, 5 → sorted 1, 2, 4, 5, 6. Only 3 is missing. Mark 3, then SEND."

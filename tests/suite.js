@@ -5,6 +5,7 @@ import { validateContent } from '../engine/content.js';
 import { explain } from '../engine/feedback.js';
 import * as S from '../engine/state.js';
 import { buildWorld } from '../render/world.js';
+import { tutorialWorld, advanceTutorial, tutorialFinished } from '../render/tutorial.js';
 
 function eq(actual, expected, label = '') {
   const a = JSON.stringify(actual), e = JSON.stringify(expected);
@@ -104,10 +105,33 @@ export function buildSuite(content) {
   t('3.x invalid: piece 7 of 6', () => eq(outcome('3.1', { kind: 'pieces', resend: [7] })[0], 'invalid-input'));
 
   // ---- session ----
-  const play = () => S.beginPlay(S.openBriefing(S.createSession(content)));
-  t('state: fresh session opens on the map, then the Level 1 briefing', () => {
+  const play = () => S.beginPlay(S.finishTutorial(S.openBriefing(S.createSession(content))));
+  t('state: fresh session opens on the map, then the link test, then the Level 1 briefing', () => {
     const s = S.createSession(content);
-    eq([s.view, S.openBriefing(s).view, S.currentLevel(s).id], ['map', 'briefing', 'L1']);
+    const tut = S.openBriefing(s);
+    eq([s.view, tut.view, S.finishTutorial(tut).view, S.currentLevel(s).id], ['map', 'tutorial', 'briefing', 'L1']);
+  });
+  t('state: link test is shown once; restart keeps it done', () => {
+    const done = S.finishTutorial(S.openBriefing(S.createSession(content)));
+    eq([done.tutorialDone, S.restart(done, true).tutorialDone, S.openBriefing(S.restart(done, true)).view], [true, true, 'briefing']);
+  });
+  t('state: link test never touches round progress', () => {
+    const done = S.finishTutorial(S.openBriefing(S.createSession(content)));
+    eq(S.totals(done).attempts + S.totals(done).hints + S.totals(done).solved, 0);
+  });
+  t('tutorial: steps advance only on the matching action, in order', () => {
+    let step = 0;
+    step = advanceTutorial(step, { type: 'entered' }); eq(step, 0, 'enter before moving');
+    step = advanceTutorial(step, { type: 'moved' }); eq(step, 1);
+    step = advanceTutorial(step, { type: 'hint' }); eq(step, 1, 'hint before jumping');
+    step = advanceTutorial(step, { type: 'crossed-gap' }); eq(step, 2);
+    step = advanceTutorial(step, { type: 'entered' }); eq(step, 3);
+    step = advanceTutorial(step, { type: 'hint' }); eq([step, tutorialFinished(step)], [4, true]);
+    eq(advanceTutorial(step, { type: 'moved' }), 4, 'finished stays finished');
+  });
+  t('tutorial: practice door sits past the gap on solid ground', () => {
+    const w = tutorialWorld(); const z = w.zones[0]; const g = w.gaps[0];
+    ok(z.x > g.x + g.w && w.ground.some((s) => z.x >= s.x && z.x + z.w <= s.x + s.w), 'door placement');
   });
   t('state: wrong answer counts an attempt, keeps the round open', () => {
     const { state } = S.submit(play(), { kind: 'door', ip: '10.0.0.9', port: 443 });
@@ -143,6 +167,7 @@ export function buildSuite(content) {
     for (let guard = 0; guard < 40 && s.view !== 'summary'; guard++) {
       views.push(s.view);
       if (s.view === 'map') s = S.openBriefing(s);
+      else if (s.view === 'tutorial') s = S.finishTutorial(s);
       else if (s.view === 'briefing') s = S.beginPlay(s);
       else if (s.view === 'play') { s = S.submit(s, answers[S.currentRound(s).id]).state; s = S.next(s); }
       else if (s.view === 'level-done') s = S.next(s);
