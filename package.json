@@ -1,0 +1,12 @@
+{
+  "name": "packet-dash",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A networking-themed platformer that teaches ports, latency vs bandwidth, and lost-packet resends.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "start": "python3 start.py"
+  },
+  "license": "SEE LICENSE IN LICENSE"
+}

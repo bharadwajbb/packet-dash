@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Packet Dash tests</title>
+  <style>
+    :root { color-scheme: dark; }
+    body { background: #060c18; color: #d7e3f4; font: 14px/1.5 ui-monospace, Menlo, monospace; margin: 0; padding: 16px; }
+    h1 { font-size: 1.3rem; }
+    .pass { color: #3ddc84; } .fail { color: #ff6b7a; }
+    #summary { font-size: 1.1rem; font-weight: 700; }
+    li { padding: 2px 0; }
+  </style>
+</head>
+<body>
+  <h1>Packet Dash · test runner</h1>
+  <p id="summary" role="status">Running…</p>
+  <ol id="results"></ol>
+  <script type="module">
+    import { runSuite } from './suite.js';
+    const summary = document.getElementById('summary');
+    const list = document.getElementById('results');
+    try {
+      const content = await (await fetch('../data/levels.json', { cache: 'no-store' })).json();
+      const results = await runSuite(content);
+      for (const r of results) {
+        const li = document.createElement('li');
+        li.className = r.pass ? 'pass' : 'fail';
+        li.textContent = `${r.pass ? '✔' : '✖'} ${r.name}${r.error ? ' — ' + r.error : ''}`;
+        list.append(li);
+      }
+      const failed = results.filter((r) => !r.pass);
+      if (results.length === 0) { summary.textContent = '✖ zero tests discovered'; summary.className = 'fail'; }
+      else {
+        summary.textContent = `${failed.length ? '✖' : '✔'} ${results.length - failed.length}/${results.length} passed${failed.length ? ' · failed: ' + failed.map((f) => f.name).join(', ') : ''}`;
+        summary.className = failed.length ? 'fail' : 'pass';
+      }
+    } catch (e) {
+      summary.textContent = '✖ runner error: ' + e.message;
+      summary.className = 'fail';
+    }
+  </script>
+</body>
+</html>

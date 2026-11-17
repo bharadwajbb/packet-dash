@@ -1,0 +1,261 @@
+{
+  "schemaVersion": 1,
+  "sources": [
+    {
+      "id": "iana-ports",
+      "title": "IANA Service Name and Transport Protocol Port Number Registry",
+      "url": "https://www.iana.org/assignments/service-names-port-numbers",
+      "section": "Registry entries for 22/tcp, 443/tcp, 5432/tcp",
+      "claim": "Port 22 is SSH, 443 is HTTPS and 5432 is PostgreSQL."
+    },
+    {
+      "id": "rfc9293-reset",
+      "title": "RFC 9293 · Transmission Control Protocol (TCP)",
+      "url": "https://www.rfc-editor.org/rfc/rfc9293#section-3.5.2",
+      "section": "§3.5.2 Reset Generation",
+      "claim": "If the connection does not exist (CLOSED), a reset is sent in response to any incoming segment except another reset. Applications report this as \"connection refused\"."
+    },
+    {
+      "id": "rfc9293-seq",
+      "title": "RFC 9293 · Transmission Control Protocol (TCP)",
+      "url": "https://www.rfc-editor.org/rfc/rfc9293#section-3.4",
+      "section": "§3.4 Sequence Numbers",
+      "claim": "Every piece of data sent is numbered, so the receiver can put it in order and spot what is missing."
+    },
+    {
+      "id": "rfc2018",
+      "title": "RFC 2018 · TCP Selective Acknowledgment Options",
+      "url": "https://www.rfc-editor.org/rfc/rfc2018",
+      "section": "§3 Sack Option Format; §5 Retransmission Strategy",
+      "claim": "The receiver tells the sender which blocks it already holds; segments not acknowledged are the ones available for retransmission."
+    },
+    {
+      "id": "kurose-delay",
+      "title": "Kurose & Ross, Computer Networking: A Top-Down Approach",
+      "url": "https://gaia.cs.umass.edu/kurose_ross/index.php",
+      "section": "§1.4 Delay, Loss, and Throughput in Packet-Switched Networks",
+      "claim": "Delay includes propagation delay (how long the road is) and transmission delay, packet size divided by link rate (how wide it is). This game ignores queueing and processing delay."
+    },
+    {
+      "id": "news-faa-scripps",
+      "title": "Scripps News · What caused the FAA ground stop? Officials point to router failure during update",
+      "url": "https://www.scrippsnews.com/life/travel/what-caused-the-faa-ground-stop-officials-point-to-router-failure",
+      "section": "Reported Nov 14, 2026",
+      "claim": "A newly installed router sent more than 1,000 connection attempts every four to five seconds during copper-to-fibre maintenance."
+    },
+    {
+      "id": "news-faa-aljazeera",
+      "title": "Al Jazeera · FAA ground stop lifted: Why were US flights grounded, and what's next?",
+      "url": "https://www.aljazeera.com/news/2026/11/14/faa-ground-stop-lifted-why-were-us-flights-grounded-and-whats-next",
+      "section": "Reported Nov 14, 2026",
+      "claim": "Background on the Nov 13 nationwide ground stop."
+    },
+    {
+      "id": "news-chase-aljazeera",
+      "title": "Al Jazeera · US bank outage: What caused Chase problems and Zelle payment delays?",
+      "url": "https://www.aljazeera.com/news/2026/11/17/us-bank-outage-what-caused-chase-problems-and-zelle-payment-delays",
+      "section": "Reported Nov 17, 2026",
+      "claim": "Chase attributed the Nov 16 issue to a software bug in an on-premise hardware system, not cyber-related."
+    },
+    {
+      "id": "news-chase-cnn",
+      "title": "CNN · Thousands of Chase Bank customers report trouble with online banking services",
+      "url": "https://www.cnn.com/2026/11/16/business/bank-outage-chase-us-bank-bank-of-america",
+      "section": "Reported Nov 16, 2026",
+      "claim": "Customer reports of trouble with online banking on Nov 16."
+    }
+  ],
+  "levels": [
+    {
+      "id": "L1",
+      "title": "Find the Door",
+      "outcome": "Tell apart what an IP address picks (the machine) from what a port picks (the program), and recognise \"connection refused\".",
+      "mechanic": "door",
+      "link": { "from": "Laptop", "to": "Router" },
+      "briefing": {
+        "analogy": "An IP address is a building's street address. A port is a numbered door inside that building, and behind each open door one program is listening: a website on 443 (HTTPS), remote login on 22 (SSH), a PostgreSQL database on 5432.",
+        "example": "A packet for 172.16.0.8 : 22 goes to building 172.16.0.8 and through door 22 to the SSH program. If door 22 there is dark, nobody is listening: the server sends back a reset and your app says \"connection refused\". The packet never tries another door.",
+        "boundary": "This level skips how the packet finds the building (routing) and any firewalls. The road there already works.",
+        "controls": "Arrow keys run, Space jumps, Up or E enters a door. Prefer no jumping? Press C for Console mode at any time."
+      },
+      "sourceIds": ["iana-ports", "rfc9293-reset"],
+      "feedback": {
+        "correct-deliver": "✔ delivered {ip}:{port} → {service}. The address picked building {ip}; port {port} picked the {service} program listening there.",
+        "correct-refused": "✔ RST from {ip}:{port} — connection refused. Nothing listens on port {port} at {ip}, so the server answers with a reset and your app reports \"connection refused\". A packet never switches to another door.",
+        "wrong-building": "✖ right door, wrong building. You entered {chosenIp}:{chosenPort}, but the header says {ip}. The IP address picks the machine; the port only picks the program on it.",
+        "wrong-door": "✖ wrong door. Building {ip} is right, but door {chosenPort} is {chosenService}. The header asks for port {port}, and a packet can't pick a different door.",
+        "wrong-door+refused": "Door {port} here is CLOSED, so the right call is Bounce back: the server resets the connection.",
+        "wrong-building+refused": "Door {port} on {ip} is CLOSED, so the right call is Bounce back: the server resets the connection.",
+        "closed-door":"✖ nobody home. Port {port} at {ip} is CLOSED: no program is listening, so nothing receives the packet here. The server replies with a reset. Use the Bounce back pad to report \"connection refused\".",
+        "unneeded-bounce": "✖ not refused. {service} is LISTENING on {ip}:{port}, so the packet gets delivered. Bounce back is only for a door where nobody is listening.",
+        "invalid-input": "Choose a door or the Bounce back pad."
+      },
+      "news": {
+        "headline": "Nov 13, 2026 · FAA nationwide ground stop",
+        "reported": [
+          "Transportation Secretary Sean Duffy said a newly installed router at a remote FAA facility sent \"more than 1,000 connection attempts every four to five seconds\" into the FAA network.",
+          "Thousands of flights were disrupted. FAA Administrator Bryan Bedford said officials saw \"zero evidence of anything nefarious\".",
+          "Investigators were still working out whether it was human error, an installation mistake or faulty equipment."
+        ],
+        "connection": "Every connection attempt is a packet knocking on an address and a port, exactly like the doors in this level. One device knocking a thousand times every few seconds can keep the doors busy for the traffic that matters.",
+        "sourceIds": ["news-faa-scripps", "news-faa-aljazeera"]
+      },
+      "rounds": [
+        {
+          "id": "1.1",
+          "mechanic": "door",
+          "header": { "src": "192.168.1.20", "dst": "10.0.0.5", "port": 443, "note": "HTTPS request" },
+          "buildings": [
+            { "ip": "10.0.0.5", "doors": [
+              { "port": 22, "service": "SSH", "listening": true },
+              { "port": 443, "service": "HTTPS", "listening": true },
+              { "port": 5432, "service": "PostgreSQL", "listening": true }
+            ] },
+            { "ip": "10.0.0.9", "doors": [
+              { "port": 22, "service": "SSH", "listening": true },
+              { "port": 443, "service": "HTTPS", "listening": true },
+              { "port": 5432, "service": "PostgreSQL", "listening": true }
+            ] }
+          ],
+          "hints": [
+            "Read the header from left to right: DST is the building's address, the number after the colon is the door. Find the building first, then the door.",
+            "Header DST 10.0.0.5 : 443 → building 10.0.0.5, door 443 (HTTPS). Door 443 on 10.0.0.9 is a different machine."
+          ]
+        },
+        {
+          "id": "1.2",
+          "mechanic": "door",
+          "header": { "src": "192.168.1.20", "dst": "10.0.0.9", "port": 5432, "note": "database query" },
+          "buildings": [
+            { "ip": "10.0.0.5", "doors": [
+              { "port": 22, "service": "SSH", "listening": true },
+              { "port": 443, "service": "HTTPS", "listening": true },
+              { "port": 5432, "service": "PostgreSQL", "listening": true }
+            ] },
+            { "ip": "10.0.0.9", "doors": [
+              { "port": 22, "service": "SSH", "listening": true },
+              { "port": 443, "service": "HTTPS", "listening": true },
+              { "port": 5432, "service": "PostgreSQL", "listening": false }
+            ] }
+          ],
+          "hints": [
+            "Find the building and door from the header, then check its LED: LISTENING means a program will take the packet; CLOSED means nobody will.",
+            "Door 5432 on 10.0.0.9 is CLOSED. The server sends a reset, so the answer is Bounce back (connection refused). 10.0.0.5 has 5432 open, but it's the wrong machine."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "L2",
+      "title": "Fast or Wide?",
+      "outcome": "Predict whether a short narrow path or a long wide path delivers a packet of a given size sooner.",
+      "mechanic": "path",
+      "link": { "from": "Router", "to": "ISP" },
+      "briefing": {
+        "analogy": "Latency is how long the road is: travel time, even for a tiny packet. Bandwidth is how wide the road is: how many KB of your packet squeeze through each millisecond.",
+        "example": "delivery time = travel time + size ÷ bandwidth. A 40 KB packet on a 5 ms, 2 KB/ms cable takes 5 + 40 ÷ 2 = 25 ms.",
+        "boundary": "We count only travel time and squeeze-through time, for one one-way trip. Real networks add queues, handshakes and round trips.",
+        "controls": "Run to the fork and enter the path you think delivers sooner. The race replay shows both."
+      },
+      "sourceIds": ["kurose-delay"],
+      "feedback": {
+        "correct-fastest": "✔ delivered in {chosenMs} ms via {chosenName}. {chosenName}: {chosenCalc}. {otherName}: {otherCalc}.",
+        "wrong-wider": "✖ {chosenName}: {chosenCalc}. {otherName}: {otherCalc}. A {size} KB packet barely uses the extra width, so the long road costs more than the narrow pipe.",
+        "wrong-shorter": "✖ {chosenName}: {chosenCalc}. {otherName}: {otherCalc}. A {size} KB packet takes ages to squeeze through the narrow pipe, so the wide trunk wins despite the longer road.",
+        "invalid-input": "Choose one of the two paths."
+      },
+      "news": {
+        "headline": "Nov 13, 2026 · The upgrade behind the ground stop",
+        "reported": [
+          "Secretary Duffy said a contractor was \"doing routine maintenance to switch telecommunication lines from old copper wire\", moving service at a remote FAA facility to fibre.",
+          "The router at the centre of the outage was installed as part of that copper-to-fibre work."
+        ],
+        "connection": "Fibre is this level's wide trunk: far more bandwidth than copper, which is why networks upgrade. But you just saw that bandwidth isn't the only thing that sets speed, and the outage is a reminder that the change itself carries risk.",
+        "sourceIds": ["news-faa-scripps"]
+      },
+      "rounds": [
+        {
+          "id": "2.1",
+          "mechanic": "path",
+          "header": { "src": "192.168.1.20", "dst": "10.0.0.5", "sizeKB": 10, "note": "chat message" },
+          "paths": [
+            { "id": "tunnel", "name": "Copper Tunnel", "medium": "copper", "travelMs": 20, "bandwidthKBperMs": 1 },
+            { "id": "trunk", "name": "Fibre Trunk", "medium": "fibre", "travelMs": 110, "bandwidthKBperMs": 10 }
+          ],
+          "hints": [
+            "Work out each path: travel ms + size ÷ bandwidth. The smaller total wins, whatever the road looks like.",
+            "Tunnel 20 + 10 ÷ 1 = 30 ms. Trunk 110 + 10 ÷ 10 = 111 ms. Take the Copper Tunnel."
+          ]
+        },
+        {
+          "id": "2.2",
+          "mechanic": "path",
+          "header": { "src": "192.168.1.20", "dst": "10.0.0.5", "sizeKB": 1000, "note": "photo upload" },
+          "paths": [
+            { "id": "tunnel", "name": "Copper Tunnel", "medium": "copper", "travelMs": 20, "bandwidthKBperMs": 1 },
+            { "id": "trunk", "name": "Fibre Trunk", "medium": "fibre", "travelMs": 110, "bandwidthKBperMs": 10 }
+          ],
+          "hints": [
+            "Same paths, much bigger packet. Recalculate: the squeeze-through part grows with size.",
+            "Tunnel 20 + 1000 ÷ 1 = 1020 ms. Trunk 110 + 1000 ÷ 10 = 210 ms. Take the Fibre Trunk."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "L3",
+      "title": "Lost Pieces",
+      "outcome": "Identify exactly which numbered pieces are missing, whatever order the rest arrived in, and resend only those.",
+      "mechanic": "pieces",
+      "link": { "from": "ISP", "to": "Server" },
+      "briefing": {
+        "analogy": "Big messages travel as numbered pieces. They can arrive out of order, or fall into a gap and never arrive. The receiver sorts pieces by number and tells the sender which numbers it has; the sender resends only the gaps.",
+        "example": "Pieces 1–4 are sent; 2, 4 and 1 arrive. The receiver holds 1, 2, 4, so the sender resends just piece 3.",
+        "boundary": "No timers, windows or handshakes here: just which numbers arrived and which are missing.",
+        "controls": "Stand at a numbered terminal and press E to mark it for resend, then press E at the SEND flag."
+      },
+      "sourceIds": ["rfc9293-seq", "rfc2018"],
+      "feedback": {
+        "correct-resend": "✔ message complete: \"{message}\". The receiver held {held}; resending {missing} filled every gap.",
+        "still-missing": "✖ still missing {stillMissing}. The receiver holds {held} out of 1–{n}. Every number not on the board has to be resent.",
+        "out-of-order-not-lost": "✖ pieces {extras} weren't lost, they arrived early (arrival order {arrival}). Numbers let the receiver reorder; only {missing} is missing.",
+        "resent-received": "✖ the message would arrive, but {extras} were already on the board. Only {missing} were missing, and resending the rest wastes the link.",
+        "invalid-input": "Select at least one piece to resend."
+      },
+      "news": {
+        "headline": "Nov 16, 2026 · Chase transaction slowdown",
+        "reported": [
+          "Chase said it had \"a temporary issue related to a software bug in an on-premise hardware system\" and that it \"is not cyber-related\".",
+          "A spokesperson said other banks may have been slowed only to the extent they were a party to a transaction with Chase.",
+          "Around 6:30 p.m. ET Monday, Chase said transactions were posting normally."
+        ],
+        "connection": "Like your message, a transaction is only finished when the other side confirms it has everything. When one side can't confirm, the other side waits, which is how one bank's problem showed up as slowness at the banks it was dealing with.",
+        "sourceIds": ["news-chase-aljazeera", "news-chase-cnn"]
+      },
+      "rounds": [
+        {
+          "id": "3.1",
+          "mechanic": "pieces",
+          "header": { "src": "192.168.1.20", "dst": "10.0.0.5", "message": "HELLO WORLD!" },
+          "pieceCount": 6,
+          "arrived": [1, 2, 4, 6],
+          "hints": [
+            "Look at the receiver board, not the order things happened. List 1 to 6 and cross off every number on the board.",
+            "The board holds 1, 2, 4, 6. Mark 3 and 5, then SEND."
+          ]
+        },
+        {
+          "id": "3.2",
+          "mechanic": "pieces",
+          "header": { "src": "192.168.1.20", "dst": "10.0.0.5", "message": "PING PONG OK" },
+          "pieceCount": 6,
+          "arrived": [4, 1, 6, 2, 5],
+          "hints": [
+            "Pieces arriving late or early are not lost. Sort the board by number, then find the gaps.",
+            "Arrived 4, 1, 6, 2, 5 → sorted 1, 2, 4, 5, 6. Only 3 is missing. Mark 3, then SEND."
+          ]
+        }
+      ]
+    }
+  ]
+}

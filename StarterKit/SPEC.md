@@ -93,7 +93,7 @@ Three levels, two rounds per level, six rounds total. One platforming mechanic a
 
 | Round | Pak's header | Choices on screen | Correct |
 | --- | --- | --- | --- |
-| 1.1 | `DST 10.0.0.5 : 443` | Building 10.0.0.5 doors 22 · 443 · 5432; building 10.0.0.9 doors 22 · 443 · 5432; all listening | 10.0.0.5 door 443 |
+| 1.1 | `DST 10.0.0.5 : 443` | Building 10.0.0.5 doors 22 · 443 · 5432; building 10.0.0.9 doors 22 · 443 · 5432; all listening; a "Bounce back" pad | 10.0.0.5 door 443 |
 | 1.2 | `DST 10.0.0.9 : 5432` | Building 10.0.0.9 doors 22 (listening) · 443 (listening) · 5432 (dark, nobody listening); a "Bounce back" pad | Bounce back (connection refused) |
 | 2.1 | `SIZE 10 KB` | Tunnel 20 ms · 1 KB/ms; Trunk 110 ms · 10 KB/ms | Tunnel (30 ms vs 111 ms) |
 | 2.2 | `SIZE 1000 KB` | Same two paths | Trunk (210 ms vs 1020 ms) |
@@ -139,12 +139,23 @@ The whole interface should look like the inside of a network, and every visual e
 
 No user accounts, multiplayer, backend, live infrastructure access, runtime AI, leaderboard or level editor. No simulation of TCP handshakes, routing, DNS, firewalls, congestion or real timing. Platforming stays simple: no enemies, power-ups or scoring. No characters, art, sound or level layouts from existing games; all visuals are original and drawn in the browser. Visual polish must serve the networking values on screen.
 
-## Open decisions for clarify
+## Real-world echo: the November 2026 outages
 
-- Should the Level 2 briefing show the formula, or only the analogy, with the formula appearing in the log after the first choice?
-- In round 3.1, is "resend everything" counted as incorrect (as specified) or as delivered-but-inefficient?
-- How long should each platforming stretch be so it adds fun without delaying the decision (one screen or two)?
-- Does Console mode need to be offered on the briefing card, or is the C toggle plus a visible button enough?
+After each level, the level-complete screen shows a **"From the news"** card connecting the level's idea to an outage in the week this game was built. Each card states what was reported (quoted or closely paraphrased, with the date and source links), then one sentence on how this level's idea relates. Every card says: *"As reported by Nov 17, 2026. Investigations may change these details. The game is a simplified model, not a reconstruction of the incident."* No logos or branding.
+
+| After | Event | Reported | Connection to the level |
+| --- | --- | --- | --- |
+| Level 1 | FAA nationwide ground stop, Nov 13, 2026 | Transportation Secretary Duffy said a newly installed router at a remote FAA facility sent "more than 1,000 connection attempts every four to five seconds" into the FAA network; thousands of flights were disrupted; officials saw no evidence of a cyberattack; the cause (human error, installation or equipment) was still under investigation | Each connection attempt is a packet knocking on an address and port, like the doors in this level. A flood of knocks keeps the doors busy for the traffic that matters |
+| Level 2 | Same event | The work under way was routine maintenance moving telecommunication lines from old copper wire to fibre | Fibre is this level's wide trunk. Upgrades add bandwidth, but this level shows bandwidth isn't the only thing that sets speed, and the outage shows changes carry their own risk |
+| Level 3 | Chase online and branch transaction slowdown, Nov 16, 2026 | Chase said it had "a temporary issue related to a software bug in an on-premise hardware system" that "is not cyber-related"; other banks may have seen slowness only when they were a party to a transaction with Chase; by about 6:30 p.m. ET transactions were posting normally | Like your message, a transaction is only finished when the other side confirms it. When one side can't confirm, the other side waits, which is how one bank's problem showed up as slowness elsewhere |
+
+## Clarified decisions (resolved 2026-11-17)
+
+- **Level 2 formula:** the briefing shows the formula with a worked example using different numbers; the log repeats the arithmetic after every choice.
+- **Resend everything (round 3.1):** incorrect. The skill is identifying exactly the missing set; the feedback says the message would arrive but four pieces were wasted.
+- **Platforming length:** about one and a half screens of running per round, with two small gaps, then the decision zone.
+- **Console mode:** a visible "Console mode (C)" button in the play toolbar, and the first briefing mentions it.
+- **Bounce back pad:** present in both Level 1 rounds, so choosing it when someone is listening is a gradable mistake.
 
 ## Release evidence
 
