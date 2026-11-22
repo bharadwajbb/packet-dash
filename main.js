@@ -74,15 +74,15 @@ const actions = {
   toggleConsole: () => {
     consoleMode = !consoleMode;
     btnConsole.setAttribute('aria-pressed', String(consoleMode));
-    if (state.view === 'play') { renderPlay(true); log(consoleMode ? 'console mode on' : 'platform mode on', 'info'); }
-    if (state.view === 'tutorial') { renderTutorial(); log(consoleMode ? 'console mode on: every choice becomes a button, no controls needed' : 'platform mode on', 'info'); }
+    if (state?.view === 'play') { renderPlay(true); log(consoleMode ? 'console mode on' : 'platform mode on', 'info'); }
+    if (state?.view === 'tutorial') { renderTutorial(); log(consoleMode ? 'console mode on: every choice becomes a button, no controls needed' : 'platform mode on', 'info'); }
   },
   finishTutorial: () => setState(S.finishTutorial(state)),
   toggleMotion: () => {
     reducedMotion = !reducedMotion;
     document.documentElement.classList.toggle('reduce-motion', reducedMotion);
     btnMotion.setAttribute('aria-pressed', String(reducedMotion));
-    if (state.view === 'play') refreshPlayPanels();
+    if (state?.view === 'play') refreshPlayPanels();
   },
 };
 
